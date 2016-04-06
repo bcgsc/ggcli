@@ -1,0 +1,49 @@
+#!/usr/bin/env Rscript
+
+usage='
+Plot TSV data with ggplot from the command line.
+
+Usage: ggcli [-x COLNAME] [-y COLNAME] [-t TITLE] [-o OUTPUT] [-c COLNAME] [TSV_FILE]
+
+Options:
+  -x COLNAME                  TSV column to use for x coords [default: x]
+  -y COLNAME                  TSV column to use for y coords [default: y]
+  -c COLNAME --color COLNAME  assign colors by COLNAME
+  -o FILE --output FILE       output file (defaults to STDOUT)
+  -t TITLE --title TITLE      title for plot [default: title]
+'
+
+suppressMessages(library(docopt))
+suppressMessages(library(ggplot2))
+
+# parse command line opts
+opt = docopt(usage)
+
+# input TSV data
+if (!is.null(opt$TSV_FILE)) {
+    data=read.delim(opt$TSV_FILE, header=TRUE)
+} else {
+	data=read.delim(file('stdin'),header=TRUE)
+}
+
+# output PDF
+if (!is.null(opt$output)) {
+	pdf(file=opt$output)
+} else {
+    pdf(file='|cat')
+}
+
+# aesthetics
+line_size=1.0
+point_size=3
+font_size=14
+
+mymapping = aes_string(x=opt$x, y=opt$y, color=opt$c)
+
+p = ggplot(data, mapping=mymapping) +
+	geom_line() +
+	geom_point() +
+	ggtitle(opt$title)
+
+print(p)
+graphics.off()
