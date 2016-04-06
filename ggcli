@@ -21,7 +21,7 @@ opt = docopt(usage)
 
 # input TSV data
 if (!is.null(opt$TSV_FILE)) {
-    data=read.delim(opt$TSV_FILE, header=TRUE)
+	data=read.delim(opt$TSV_FILE, header=TRUE)
 } else {
 	data=read.delim(file('stdin'),header=TRUE)
 }
@@ -30,7 +30,7 @@ if (!is.null(opt$TSV_FILE)) {
 if (!is.null(opt$output)) {
 	pdf(file=opt$output)
 } else {
-    pdf(file='|cat')
+	pdf(file='|cat')
 }
 
 # aesthetics
