@@ -1,0 +1,59 @@
+#!/usr/bin/env Rscript
+
+usage='
+Create ggplot histogram from TSV data
+
+Usage: gghist [options] [TSV_FILE]
+
+Options:
+  -x COLNAME                  TSV column to use for x coords [default: x]
+  -y COLNAME                  TSV column to use for y coords [default: y]
+  -l --logy                   log scale the y axis
+  -c COLNAME --color COLNAME  assign colors by COLNAME
+  -o FILE --output FILE       output file (defaults to STDOUT)
+  -O --overlay                overlay histograms with different colors
+                              with alpha=0.5 (default is to stack them
+                              vertically)
+  -t TITLE --title TITLE      title for plot [default: title]
+'
+
+suppressMessages(library(docopt))
+suppressMessages(library(ggplot2))
+
+# parse command line opts
+opt = docopt(usage)
+
+# input TSV data
+if (!is.null(opt$TSV_FILE)) {
+	data=read.delim(opt$TSV_FILE, header=TRUE)
+} else {
+	data=read.delim(file('stdin'),header=TRUE)
+}
+
+# output to STDOUT by default
+if (is.null(opt$output)) {
+	opt$output='|cat'
+}
+pdf(file=opt$output)
+
+# what to do with multicolor histograms: stack vertically or overlay with
+# transparency?
+if (opt$overlay) {
+	vertical_pos='identity'
+    transparency=0.5
+} else {
+	vertical_pos='stack'
+	transparency=1.0
+}
+mymapping = aes_string(x=opt$x, weight=opt$y, fill=opt$c)
+
+p = ggplot(data, mapping=mymapping) +
+	ggtitle(opt$title) +
+	geom_histogram(binwidth=1, drop=TRUE, position='stack', alpha=transparency)
+
+if (opt$logy) {
+   p = p + scale_y_log10()
+}
+
+print(p)
+graphics.off()
