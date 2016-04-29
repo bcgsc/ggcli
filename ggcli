@@ -3,7 +3,7 @@
 usage='
 Plot TSV data with ggplot from the command line.
 
-Usage: ggcli [-x COLNAME] [-y COLNAME] [-t TITLE] [-o OUTPUT] [-c COLNAME] [TSV_FILE]
+Usage: ggcli [options] [TSV_FILE]
 
 Options:
   -x COLNAME                  TSV column to use for x coords [default: x]
@@ -26,12 +26,11 @@ if (!is.null(opt$TSV_FILE)) {
 	data=read.delim(file('stdin'),header=TRUE)
 }
 
-# output PDF
-if (!is.null(opt$output)) {
-	pdf(file=opt$output)
-} else {
-	pdf(file='|cat')
+# output to STDOUT by default
+if (is.null(opt$output)) {
+	opt$output='|cat'
 }
+pdf(file=opt$output)
 
 # aesthetics
 line_size=1.0
