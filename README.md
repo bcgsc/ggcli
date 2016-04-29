@@ -11,7 +11,7 @@ Plot TSV data with ggplot from the command line.
 
 	Plot TSV data with ggplot from the command line.
 
-	Usage: ggcli [-x COLNAME] [-y COLNAME] [-t TITLE] [-o OUTPUT] [-c COLNAME] [TSV_FILE]
+	Usage: ggline [-x COLNAME] [-y COLNAME] [-t TITLE] [-o OUTPUT] [-c COLNAME] [TSV_FILE]
 
 	Options:
 	   -x COLNAME                  TSV column to use for x coords [default: x]
@@ -39,14 +39,14 @@ test.tsv:
 
 Plot using STDIN/STDOUT:
 	
-	$ ggcli -x foo -y bar -t mytitle test.tsv > plot.pdf
-	$ ggcli -x foo -y bar -t mytitle test.tsv -o plot.pdf
-	$ cat test.tsv | ggcli -x foo -y bar -t mytitle > plot.pdf
+	$ ggline -x foo -y bar -t mytitle test.tsv > plot.pdf
+	$ ggline -x foo -y bar -t mytitle test.tsv -o plot.pdf
+	$ cat test.tsv | ggline -x foo -y bar -t mytitle > plot.pdf
 	
 Send plot directly to ImageMagick's `display` program:
 
-	$ ggcli -x foo -y bar -t mytitle test.tsv | display
+	$ ggline -x foo -y bar -t mytitle test.tsv | display
 
 Plot multiple groups (with different colors):
 
-	$ ggcli -x foo -y bar -t mytitle -c group test.tsv > plot.pdf
+	$ ggline -x foo -y bar -t mytitle -c group test.tsv > plot.pdf
