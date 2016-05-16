@@ -8,6 +8,7 @@ Usage: ggcli [options] [TSV_FILE]
 Options:
   -x COLNAME                  TSV column to use for x coords [default: x]
   -y COLNAME                  TSV column to use for y coords [default: y]
+  -f --font-size FONTSIZE     base font size in pt [default: 18]
   -l --logy                   log scale the y axis
   -c COLNAME --color COLNAME  assign colors by COLNAME
   -o FILE --output FILE       output file (defaults to STDOUT)
@@ -34,16 +35,15 @@ if (is.null(opt$output)) {
 pdf(file=opt$output)
 
 # aesthetics
-line_size=1.0
-point_size=3
-font_size=14
+font_size=as.numeric(opt$f)
 
 mymapping = aes_string(x=opt$x, y=opt$y, color=opt$c)
 
 p = ggplot(data, mapping=mymapping) +
-	geom_line() +
-	geom_point() +
-	ggtitle(opt$title)
+	geom_line(size=1) +
+	geom_point(size=3) +
+	ggtitle(opt$title) +
+	theme_grey(base_size=font_size)
 
 if (opt$logy) {
 	p = p + scale_y_log10()
