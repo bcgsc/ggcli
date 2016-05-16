@@ -8,6 +8,7 @@ Usage: ggcli [options] [TSV_FILE]
 Options:
   -x COLNAME                  TSV column to use for x coords [default: x]
   -y COLNAME                  TSV column to use for y coords [default: y]
+  -l --logy                   log scale the y axis
   -c COLNAME --color COLNAME  assign colors by COLNAME
   -o FILE --output FILE       output file (defaults to STDOUT)
   -t TITLE --title TITLE      title for plot [default: title]
@@ -43,6 +44,10 @@ p = ggplot(data, mapping=mymapping) +
 	geom_line() +
 	geom_point() +
 	ggtitle(opt$title)
+
+if (opt$logy) {
+	p = p + scale_y_log10()
+}
 
 print(p)
 graphics.off()
