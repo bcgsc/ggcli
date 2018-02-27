@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+
+import argparse
+import tempfile
+import subprocess
+import os
+import stat
+import sys
+
+#----------------------------------------------------------------------
+# parse command line args
+#----------------------------------------------------------------------
+
+parser = argparse.ArgumentParser(
+    description='use ggplot from the command line')
+parser.add_argument('-a', '--aes', metavar='ARG', action='store',
+    dest='aes', default='', nargs='*',
+    help='arguments for aes() function')
+parser.add_argument('-n', '--dry-run', action='store_true',
+    dest='dry_run', default=False, help='print R script to STDOUT')
+parser.add_argument('-v', '--verbose', action='store_true',
+    dest='verbose', default=False, help='show verbose output')
+
+args, unknown_args = parser.parse_known_args()
+
+# pop paths of any input files from end of command
+files = []
+while unknown_args and os.path.isfile(unknown_args[-1]):
+    files.insert(0, unknown_args.pop())
+
+if args.verbose:
+    print >> sys.stderr, 'Extracted aes() args: {0}'.format(', '.join(args.aes))
+    print >> sys.stderr, 'Extracted ggplot function args: {0}'.format(', '.join(unknown_args))
+    print >> sys.stderr, 'Extracted file args: {0}'.format(', '.join(files))
+
+#----------------------------------------------------------------------
+# build R script from command line args
+#----------------------------------------------------------------------
+
+rscript = '''#!/usr/bin/env Rscript
+library(ggplot2)
+data=read.delim(file('stdin'),header=TRUE)
+pdf('|cat')
+'''
+
+# start ggplot command, set global aes params
+
+rscript += 'p = ggplot(data, aes({0}))'.format(' '.join(args.aes))
+
+# translate remaining options/arg to ggplot function invocations,
+# e.g. "--geom_line x=foo,y=bar" => "geom_line(x=foo,y=bar)"
+
+while unknown_args:
+    arg = unknown_args.pop(0)
+    if arg.startswith('--'):
+        if len(arg) > 2:
+            ggplot_func = arg[2:]
+            func_args = []
+            while unknown_args and not unknown_args[0].startswith('--'):
+                func_args.append(unknown_args.pop(0))
+            rscript += ' +\n\t{0}({1})'.format(ggplot_func, ','.join(func_args))
+
+# render plot and flush to file
+
+rscript += '''
+print(p)
+dev.off()
+'''
+
+if args.dry_run:
+    sys.stdout.write(rscript)
+    sys.exit(0)
+
+if args.verbose:
+    print >> sys.stderr, 'Running R script:\n'
+    print >> sys.stderr, '---BEGIN SCRIPT---'
+    print >> sys.stderr, rscript + '---END SCRIPT---'
+
+#----------------------------------------------------------------------
+# write R script to temp file and make it executable
+#----------------------------------------------------------------------
+
+tmp = tempfile.NamedTemporaryFile(delete=False)
+
+tmp.write(rscript)
+tmp.flush()
+tmp.close()
+os.chmod(tmp.name, stat.S_IRWXU)
+
+if args.verbose:
+    print >> sys.stderr, 'Wrote R script to temp file: {0}'.format(tmp.name)
+
+#----------------------------------------------------------------------
+# run script on STDIN or file args
+#----------------------------------------------------------------------
+
+if files:
+    p = subprocess.Popen(tmp.name, stdin=subprocess.PIPE)
+    for path in files:
+        f = open(path, 'r')
+        p.stdin.writelines(iter(f.readline, ''))
+    p.stdin.close()
+else:
+    p = subprocess.Popen(tmp.name)
+
+#----------------------------------------------------------------------
+# cleanup
+#----------------------------------------------------------------------
+
+p.wait()
+os.remove(tmp.name)
